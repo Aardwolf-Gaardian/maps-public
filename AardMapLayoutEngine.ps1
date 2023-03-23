@@ -7,8 +7,8 @@
 # Import JSON files from MUSHclient mapper
 Write-Host "Importing files..."
 $m_areas = Get-Content "** PUT A JSON EXPORTED VERSION OF YOUR MUSHCLIENT MAPPER DB AREAS TABLE HERE **" | ConvertFrom-JSON
-$m_rooms = Get-Content "** PUT A JSON EXPORTED VERSION OF YOUR MUSHCLIENT MAPPER DB AREAS TABLE HERE **" | ConvertFrom-JSON
-$m_exits = Get-Content "** PUT A JSON EXPORTED VERSION OF YOUR MUSHCLIENT MAPPER DB AREAS TABLE HERE **" | ConvertFrom-JSON
+$m_rooms = Get-Content "** PUT A JSON EXPORTED VERSION OF YOUR MUSHCLIENT MAPPER DB ROOMS TABLE HERE **" | ConvertFrom-JSON
+$m_exits = Get-Content "** PUT A JSON EXPORTED VERSION OF YOUR MUSHCLIENT MAPPER DB EXITS TABLE HERE **" | ConvertFrom-JSON
 
 # Pick an area
 $areauid = "** PUT THE KEYWORD OF YOUR AREA HERE, I HAVE BEEN TRYING annwn **"
