@@ -8,6 +8,6 @@ If you want this script to work you will need to:
 
 Once you've done those things you should be able to just right-click it and choose "Run with PowerShell".
 
-If you want to actually get some output (it currently doesn't work properly), comment out everything between "OPTIMIZATION LOOP" and "OPTIMIZATION LOOP ENDS".
+The script has now been fixed enough that it actually does run without getting stuck. However the optimization passes do not give the desired result.
 
-You should get to a "command>" prompt, you can just type "exit" and press Enter to have it output the result.
+After that you should get to a "command>" prompt, you can just type "exit" and press Enter to have it output the result.
