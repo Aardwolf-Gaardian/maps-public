@@ -387,10 +387,11 @@ function whatIfMove {
 
 # OPTIMIZATION LOOP
 $moves = 0
+$movesThisPass = 9999
 $lastmoves = 0
 $roomsMoved = @()
 $index = 0
-$passes = 0
+$passes = 1
 $lastdisconnectedScore = 9999
 $disconnectedScore = getDisconnectedScore $positionedRooms
 if ($disconnectedScore -gt 0) {
@@ -400,7 +401,13 @@ if ($disconnectedScore -gt 0) {
 		if ($index -gt $positionedRooms.Count) {
 			# yes, reset it
 			Write-Host "Pass $($passes), $($moves) move(s), $($disconnectedScore) disconnected exits."
+			if ($movesThisPass -eq 0) {
+				$times++
+			} else {
+				$times = 0
+			}
 			$index = 0
+			$movesThisPass = $moves
 			$lastmoves = $moves
 			$moves = 0
 			$lastdisconnectedScore = $disconnectedScore
@@ -411,6 +418,7 @@ if ($disconnectedScore -gt 0) {
 		# have we already moved this room?
 		if ($roomsMoved.uid -contains $room.uid) {
 			# yes we have, skip it
+			$index++
 			continue
 		}
 		# get compass exits of this room
@@ -418,6 +426,7 @@ if ($disconnectedScore -gt 0) {
 		$roomexits = $arearoomexits | Where-Object {($_.fromuid -as [int]) -ne $null -and ($_.touid -as [int]) -ne $null -and ($_.fromuid -as [int]) -ne 0 -and ($_.touid -as [int]) -ne 0 -and ($_.fromuid -as [int]) -eq $room.uid -and ("n","e","s","w","u","d") -contains $_.dir }
 		if ($roomexits -eq $null) {
 			# this room has no compass exits, skip
+			$index++
 			continue
 		}
 		$neighbours = @()
@@ -426,7 +435,7 @@ if ($disconnectedScore -gt 0) {
 				# an exit that goes back to itself, skip
 				continue
 			}
-			if ($neighbours -contains ($exit.touid -as [int])) {
+			if ($neighbours -contains ($exit.touid -as [int]) -or $roomsMoved.uid -contains ($exit.touid -as [int])) {
 				# a target room we've already looked at, skip
 				continue
 			}
@@ -475,7 +484,11 @@ if ($disconnectedScore -gt 0) {
 						if ($checkRoom.uid -eq $targetRoom.uid) {
 							$isConnected = $true
 						} else {
-							$destRoom = $checkRoom
+							if ($checkRoom.Count -gt 0) {
+								$destRoom = $checkRoom | Select-Object -First 1
+							} else {
+								$destRoom = $checkRoom
+							}
 						}
 					} else {
 						$x = $x + $xdelta
@@ -489,11 +502,31 @@ if ($disconnectedScore -gt 0) {
 			}
 			if ($found -and $destRoom -ne $null) {
 				# if it's found but it's not connected, there's a room in the way, so the exit is disconnected and a swap is needed
+				# have we already moved this room?
+				if ($roomsMoved.uid -contains $targetRoom.uid -or $roomsMoved.uid -contains $destRoom.uid) {
+					# yes we have, skip it
+					continue
+				}
 				$result = whatIfMove $targetRoom $destRoom $positionedRooms
 				if ($result -le 0) {
-					# this move would reduce the number of disconnected exits, do it
-					$destRoom.uid = $targetRoom.uid
-					$positionedRooms = $positionedRooms | Where-Object {if ($_.uid -eq $destRoom.uid) {$destRoom} else {$_}}
+					# this swap would reduce the number of disconnected exits, do it
+					$positionedRooms = $positionedRooms | Where-Object {if ($_.uid -eq $targetRoom.uid) {
+						[PSCustomObject]@{
+							uid		= $targetRoom.uid
+							name	= $targetRoom.name
+							x		= $destRoom.x
+							y		= $destRoom.y
+							pk		= $targetRoom.pk
+						}
+					} elseif ($_.uid -eq $destRoom.uid) {
+						[PSCustomObject]@{
+							uid		= $destRoom.uid
+							name	= $destRoom.name
+							x		= $targetRoom.x
+							y		= $targetRoom.y
+							pk		= $destRoom.pk
+						}
+					} else {$_}}
 					$moves++
 					$disconnectedScore += $result
 					$roomsMoved += $targetRoom
@@ -501,6 +534,11 @@ if ($disconnectedScore -gt 0) {
 				}
 			} else {
 				# it's not connected but nothing was found, so the exit is disconnected and a move is needed
+				# have we already moved this room?
+				if ($roomsMoved.uid -contains $targetRoom.uid) {
+					# yes we have, skip it
+					continue
+				}
 				$destRoom = $null
 				$destRoom = [PSCustomObject]@{
 					uid		= 0
@@ -521,7 +559,7 @@ if ($disconnectedScore -gt 0) {
 			}
 		}
 		$index++
-	} until ($disconnectedScore -eq $lastdisconnectedScore -and $passes -gt 1)
+	} until ($disconnectedScore -eq 0 -or $movesThisPass -eq 0 -or $times -gt 10)
 }
 # OPTIMIZATION LOOP ENDS
 
