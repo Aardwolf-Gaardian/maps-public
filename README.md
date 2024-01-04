@@ -21,3 +21,8 @@ Some of the commands aren't implemented yet but you can at least:
 * select an area
 * lay it out
 * export the area layout to JSON or CSV
+
+# SVGMapRenderer.ps1
+Rewritten to accept JSON output from AardMapLayoutEngine.ps1.
+
+You'll also need the .png files, put them in the same directory as your .json files as that's where the HTML output will be saved.
